@@ -10,29 +10,28 @@ struct
   structure T = Tokens
   structure A = Ast
 
-  fun binop2node (T.Binop (x)) (e1, e2) = A.BinOp (x, e1, e2)
-    | binop2node _ _= raise Fail("Invalid binary operator")
+  fun binop2node (T.Binop(x)) (e1, e2) = A.BinOp(x, e1, e2)
+    | binop2node _ _ = raise Fail("Invalid binary operator")
 
-  fun unop2node (T.Unop (x)) (e1) = A.UnOp(x, e1)
+  fun unop2node (T.Unop(x)) (e1) = A.UnOp(x, e1)
     | unop2node _ _ = raise Fail("Invalid unary operator")
   
   fun abs2node (T.Lambda(i)) (exp) = A.Abs(i, exp)
     | abs2node _ _ = raise Fail("Invalid lambda expression")
   
-  fun cons2node (T.Cons) (e1, e2) = A.BinOp(A.CONS, e1, e2)
+  fun cons2node T.Cons (e1, e2) = A.BinOp(A.CONS, e1, e2)
     | cons2node _ _ = raise Fail("Invalid cons expression")
   
-  fun cond2node (T.If) (if_exp, then_exp, else_exp) = A.Cond(if_exp, then_exp, else_exp)
+  fun cond2node T.If (if_e, then_e, else_e) = A.Cond(if_e, then_e, else_e)
     | cond2node _ _ = raise Fail("Invalid conditional")
 
   datatype associativity = LEFT | RIGHT
 
-  (* Returns the correct association rule for the given token.  Right rule 
-   * for application still needs to be added.  *)
-  fun assoc ((T.Unop _) | (T.Lambda _) | (T.Cons)) = RIGHT
-    | assoc (T.Binop _) = LEFT
-  
-  
+  (* Returns the correct association rule for the given token.
+   * FIXME: Need to somehow make application right-associative. *)
+  fun assoc (T.Unop(_) | T.Lambda(_) | T.Cons) = RIGHT
+    | assoc (T.Binop(_)) = LEFT
+    
   (* Returns a number representative of the priority of the given operation
    * over others.  Higher numbers denote higher priority.  Useful for 
    * determining order of operations in an expression.  Application still 
