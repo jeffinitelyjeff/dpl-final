@@ -34,17 +34,17 @@ struct
     
   (* Returns a number representative of the priority of the given operation
    * over others.  Higher numbers denote higher priority.  Useful for 
-   * determining order of operations in an expression.
-   * FIXME: Application still needs to be added with a priority of 7. *)
-  fun prec (T.Lambda(_)) = 0
+   * determining order of operations in an expression. *)
+   fun prec (T.Lambda(_)) = 0
     | prec (T.Binop(A.OR | A.AND)) = 1
     | prec (T.Binop(A.GT | A.GE | A.LT | A.LE | A.EQ | A.NE)) = 2
     | prec (T.Cons) = 3
     | prec (T.Binop(A.PLUS | A.SUB)) = 4
     | prec (T.Binop(A.TIMES | A.DIV)) = 5
     | prec (T.Unop(_)) = 6
-  (*  | prec (APPLICATION _) = 7 *)
-    | prec (T.RParen | T.Endif) = ~9000
+    (* FIXME: get application working.
+    | prec (APPLICATION _) = 7 *)
+    | prec (T.RParen | T.Endif) = ~9000 *)
     | prec _ = raise Fail("Invalid operator")
 
   fun parse_expression lexer =
@@ -73,7 +73,11 @@ struct
 
       and force_ops tok es [] = (es, [])
       | force_ops tok es (T.LParen :: rators) = (es, T.LParen :: rators)
-      | force_ops tok (e1::e2::e3::es) (T.If :: rators) =  (es, T.If :: rators)
+      (* FIXME: I'm not sure, but I think this is the way to handle conditionals...
+       * cuz If and Else tokens are like LParens... *)
+      | force_ops tok es (T.Else :: rators) = (es, T.Else :: rators)
+      | force_ops tok es (T.Then :: rators) = (es, T.Then :: rators)
+      | force_ops tok es (T.If   :: rators) = (es, T.If   :: rators)
       | force_ops tok es (rator :: rators) =
             if prec tok > prec rator orelse
                (prec tok = prec rator andalso assoc tok = RIGHT)
@@ -97,24 +101,30 @@ struct
         case tok of
           (T.Ident(i)) => parse_tokens lexer (A.Ident(i)::estack) opstack
           | (T.Num(n)) => parse_tokens lexer (A.Number(n)::estack) opstack
-          | T.True => parse_tokens lexer (A.Boolean(true)::estack) opstack
-          | T.False => parse_tokens lexer (A.Boolean(false)::estack) opstack
-          | T.Nil => parse_tokens lexer (A.NilList::estack) opstack
-          | T.If => parse_tokens lexer estack (tok :: opstack)
-          | T.Then => parse_tokens lexer estack opstack
-          | T.Else => parse_tokens lexer estack opstack
+          | T.True     => parse_tokens lexer (A.Boolean(true)::estack) opstack
+          | T.False    => parse_tokens lexer (A.Boolean(false)::estack) opstack
+          | T.Nil      => parse_tokens lexer (A.NilList::estack) opstack
+          | T.If       => parse_tokens lexer estack (T.If :: opstack)
+          | T.Then     => parse_tokens lexer estack (T.Then :: opstack)
+          | T.Else     => parse_tokens lexer estack (T.Else :: opstack)
           | T.Endif =>
             let
-              val (es', (T.If :: rators)) = force_ops tok estack opstack
-            in parse_tokens lexer es' rators end
-          | ((T.Unop _) | (T.Binop _) | (T.Lambda _) | (T.Cons)) =>
+              val ((else_e :: es),   (T.Else :: ops))   = force_ops T.Endif estack opstack
+              val ((then_e :: es'),  (T.Then :: ops'))  = force_ops T.Endif es ops
+              val ((if_e   :: es''), (T.If   :: ops'')) = force_ops T.Endif es' ops'
+            in
+              parse_tokens lexer (A.Cond(if_e, then_e, else_e) :: es'') ops''
+            end
+          | (T.Unop(_) | T.Binop(_) | T.Lambda(_) | T.Cons) =>
             let
-	      val (es', rators') = force_ops tok estack opstack
-            in parse_tokens lexer es' (tok :: rators') end
-          | T.LParen => parse_tokens lexer estack (tok :: opstack)
+	          val (es', rators') = force_ops tok estack opstack
+            in
+              parse_tokens lexer es' (tok :: rators')
+            end
+          | T.LParen => parse_tokens lexer estack (T.LParen :: opstack)
           | T.RParen =>
             let 
-              val (es', (T.LParen :: rators)) = force_ops tok estack opstack
+              val (es', (T.LParen :: rators)) = force_ops T.RParen estack opstack
             in parse_tokens lexer es' rators end
           | (T.EOS) => (estack, opstack)
           | (T.EOF) => raise Fail("Semicolon Expected")
