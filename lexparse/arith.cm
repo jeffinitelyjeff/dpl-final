@@ -1,0 +1,21 @@
+Group
+    functor Lexers
+    signature LEXER
+    structure ArithLex
+    structure Tokens
+
+    structure Tests
+is
+    tokens.sml
+    arith.lex
+
+    ast.sml
+    parse_arith.sml
+
+    lexer.sig
+    lexers.sml
+    unit_test.sml
+    tests.sml
+
+    $/basis.cm
+    $smlnj-tdp/plugins.cm
