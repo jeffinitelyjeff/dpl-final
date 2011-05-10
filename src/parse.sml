@@ -59,17 +59,17 @@ struct
       fun pop_op estack [] = raise Fail "Unexpected empty opstack"
         | pop_op [] opstack = raise Fail "Missing arguments for operator"
         (* Unary operations. *)
-        | pop_op (rand::rands) ((rator as (T.Unop(_)))::rators) =
-            ( ((unop2node rator)(rand)::rands) , rators )
+        | pop_op (rand :: rands) ((rator as (T.Unop(_))) :: rators) =
+            ( ((unop2node rator)(rand) :: rands) , rators )
         (* Binary operations. *)
-        | pop_op (rand2::rand1::rands) ((rator as (T.Binop(_)))::rators) =
-            ( ((binop2node rator)(rand1, rand2)::rands) , rators )
+        | pop_op (rand2::rand1::rands) ((rator as (T.Binop(_))) :: rators) =
+            ( ((binop2node rator)(rand1, rand2) :: rands) , rators )
         (* Abstraction. *)
-        | pop_op (rand::rands) ((rator as (T.Lambda(_)))::rators) =
-            ( ((abs2node rator)(rand1, rand2)::rands) , rators )
+        | pop_op (rand :: rands) ((rator as (T.Lambda(_))) :: rators) =
+            ( ((abs2node rator)(rand1, rand2) :: rands) , rators )
         (* If-then-else. *)
-        | pop_op (rand3::rand2::rand1::rands) ((rator as T.If)::rators) =
-            ( ((cond2node rator)(rand1, rand2, rand3))::rands) , rators )
+        | pop_op (rand3::rand2::rand1::rands) ((rator as T.If) :: rators) =
+            ( ((cond2node rator)(rand1, rand2, rand3)) :: rands) , rators )
 
       and force_ops tok es [] = (es, [])
       | force_ops tok es (T.LParen :: rators) = (es, T.LParen :: rators)
