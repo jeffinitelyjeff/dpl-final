@@ -34,17 +34,17 @@ struct
     
   (* Returns a number representative of the priority of the given operation
    * over others.  Higher numbers denote higher priority.  Useful for 
-   * determining order of operations in an expression.  Application still 
-   * needs to be added with a priority of 7. *)
-  fun prec (T.Lambda _) = 0
-    | prec (T.Binop (A.OR | A.AND)) = 1
-    | prec (T.Binop (A.GT | A.GE | A.LT | A.LE | A.EQ | A.NE)) = 2
+   * determining order of operations in an expression.
+   * FIXME: Application still needs to be added with a priority of 7. *)
+  fun prec (T.Lambda(_)) = 0
+    | prec (T.Binop(A.OR | A.AND)) = 1
+    | prec (T.Binop(A.GT | A.GE | A.LT | A.LE | A.EQ | A.NE)) = 2
     | prec (T.Cons) = 3
-    | prec (T.Binop (A.PLUS | A.SUB)) = 4
-    | prec (T.Binop (A.TIMES | A.DIV)) = 5
-    | prec (T.Unop _) = 6
+    | prec (T.Binop(A.PLUS | A.SUB)) = 4
+    | prec (T.Binop(A.TIMES | A.DIV)) = 5
+    | prec (T.Unop(_)) = 6
   (*  | prec (APPLICATION _) = 7 *)
-    | prec (T.RParen|T.Endif) = ~9000
+    | prec (T.RParen | T.Endif) = ~9000
     | prec _ = raise Fail("Invalid operator")
 
   fun parse_expression lexer =
@@ -57,23 +57,19 @@ struct
        *)
       
       fun pop_op estack [] = raise Fail "Unexpected empty opstack"
-      | pop_op [] opstack = raise Fail "Missing arguments for operator"
-      | pop_op (rand :: rands)
-               ((rator as (T.Unop _)):: rators) =
-            (((unop2node rator)(rand) :: rands), rators)
-      | pop_op (rand2 :: rand1 :: rands)
-               ((rator as (T.Binop _)):: rators) =
-            (((binop2node rator)(rand1, rand2) :: rands), rators)
-      | pop_op (rand :: rands) 
-               ((rator as (T.Lambda _)):: rators) =
-            (((abs2node rator) (rand) :: rands), rators)
-      | pop_op (rand2 :: rand1 :: rands)
-               ((rator as (T.Cons)):: rators) =
-            (((cons2node (T.Cons) (rand1, rand2)) :: rands), rators)
-      | pop_op (rand3 :: rand2 :: rand1 :: rands)
-               ((rator as (T.If)):: rators) =
-            (((cond2node (T.If) (rand1, rand2, rand3)) :: rands), rators)
-      
+        | pop_op [] opstack = raise Fail "Missing arguments for operator"
+        (* Unary operations. *)
+        | pop_op (rand::rands) ((rator as (T.Unop(_)))::rators) =
+            ( ((unop2node rator)(rand)::rands) , rators )
+        (* Binary operations. *)
+        | pop_op (rand2::rand1::rands) ((rator as (T.Binop(_)))::rators) =
+            ( ((binop2node rator)(rand1, rand2)::rands) , rators )
+        (* Abstraction. *)
+        | pop_op (rand::rands) ((rator as (T.Lambda(_)))::rators) =
+            ( ((abs2node rator)(rand1, rand2)::rands) , rators )
+        (* If-then-else. *)
+        | pop_op (rand3::rand2::rand1::rands) ((rator as T.If)::rators) =
+            ( ((cond2node rator)(rand1, rand2, rand3))::rands) , rators )
 
       and force_ops tok es [] = (es, [])
       | force_ops tok es (T.LParen :: rators) = (es, T.LParen :: rators)
