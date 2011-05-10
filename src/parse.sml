@@ -95,8 +95,8 @@ struct
         (* val x = print (T.toString tok ^ "===") *)
       in
         case tok of
-          T.Ident(i) => parse_tokens lexer (A.Ident(i)::estack) opstack
-          | T.Num(n) => parse_tokens lexer (A.Number(n)::estack) opstack
+          (T.Ident(i)) => parse_tokens lexer (A.Ident(i)::estack) opstack
+          | (T.Num(n)) => parse_tokens lexer (A.Number(n)::estack) opstack
           | T.True => parse_tokens lexer (A.Boolean(true)::estack) opstack
           | T.False => parse_tokens lexer (A.Boolean(false)::estack) opstack
           | T.Nil => parse_tokens lexer (A.NilList::estack) opstack
