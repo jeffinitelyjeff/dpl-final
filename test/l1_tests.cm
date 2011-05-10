@@ -1,0 +1,13 @@
+(* $ ml-build -Ctdp.instrument=true \$smlnj-tdp/back-trace.cm l1.cm \
+ * 	   Tests.run_tests testing
+ *)
+Group
+    structure Tests
+is
+	unit_test.sml
+    tests.sml
+
+	../src/l1.cm
+
+    $/basis.cm
+	$smlnj-tdp/plugins.cm

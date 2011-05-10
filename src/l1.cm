@@ -1,0 +1,31 @@
+(* $ ml-build -Ctdp.instrument=true \$smlnj-tdp/back-trace.cm l1.cm \
+ * 	   Tests.run_tests testing
+ *)
+Group
+	signature PARSE
+	signature EVAL
+	(*signature TYPING*)
+	functor Lexers
+	structure L1Lex
+    structure Ast
+	structure L1Parse
+	structure L1Cbv
+	(*structure Typing*)
+is
+    tokens.sml
+    lexer.sig
+    lexers.sml
+    l1.lex
+
+	parse.sig
+    parse.sml
+    ast.sml
+
+	(*typing.sig*)
+	(*typing.sml*)
+
+	eval.sig
+	cbv.sml
+
+    $/basis.cm
+	$smlnj-tdp/plugins.cm
