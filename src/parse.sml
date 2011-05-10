@@ -10,20 +10,16 @@ struct
   structure T = Tokens
   structure A = Ast
 
-  fun binop2node (T.Binop(x)) (e1, e2) = A.BinOp(x, e1, e2)
+  fun binop2node (T.Binop(x)) e1 e2 = A.BinOp(x, e1, e2)
     | binop2node _ _ = raise Fail("Invalid binary operator")
 
-  fun unop2node (T.Unop(x)) (e1) = A.UnOp(x, e1)
+  fun unop2node (T.Unop(x)) e1 = A.UnOp(x, e1)
     | unop2node _ _ = raise Fail("Invalid unary operator")
   
-  fun abs2node (T.Lambda(i)) (exp) = A.Abs(i, exp)
+  fun abs2node (T.Lambda(i)) exp = A.Abs(i, exp)
     | abs2node _ _ = raise Fail("Invalid lambda expression")
   
-  fun cons2node T.Cons (e1, e2) = A.BinOp(A.CONS, e1, e2)
-    | cons2node _ _ = raise Fail("Invalid cons expression")
-  
-  fun cond2node T.If (if_e, then_e, else_e) = A.Cond(if_e, then_e, else_e)
-    | cond2node _ _ = raise Fail("Invalid conditional")
+  fun cond2node if_e then_e else_e = A.Cond(if_e, then_e, else_e)
 
   datatype associativity = LEFT | RIGHT
 
@@ -60,21 +56,21 @@ struct
         | pop_op [] opstack = raise Fail "Missing arguments for operator"
         (* Unary operations. *)
         | pop_op (rand :: rands) ((rator as (T.Unop(_))) :: rators) =
-            ( ((unop2node rator)(rand) :: rands) , rators )
+            ((unop2node rator rand) :: rands, rators)
         (* Binary operations. *)
         | pop_op (rand2::rand1::rands) ((rator as (T.Binop(_))) :: rators) =
-            ( ((binop2node rator)(rand1, rand2) :: rands) , rators )
+            ((binop2node rator rand1 rand2) :: rands, rators)
         (* Abstraction. *)
         | pop_op (rand :: rands) ((rator as (T.Lambda(_))) :: rators) =
-            ( ((abs2node rator)(rand1, rand2) :: rands) , rators )
+            ((abs2node rator rand) :: rands, rators)
         (* If-then-else. *)
-        | pop_op (rand3::rand2::rand1::rands) ((rator as T.If) :: rators) =
-            ( ((cond2node rator)(rand1, rand2, rand3)) :: rands) , rators )
+        | pop_op (rand3::rand2::rand1::rands) (T.If :: rators) =
+            ((cond2node rand1 rand2 rand3) :: rands, rators)
 
       and force_ops tok es [] = (es, [])
       | force_ops tok es (T.LParen :: rators) = (es, T.LParen :: rators)
       (* FIXME: I'm not sure, but I think this is the way to handle conditionals...
-       * cuz If and Else tokens are like LParens... *)
+       * cuz If and Else tokens are like LParens... need to test *)
       | force_ops tok es (T.Else :: rators) = (es, T.Else :: rators)
       | force_ops tok es (T.Then :: rators) = (es, T.Then :: rators)
       | force_ops tok es (T.If   :: rators) = (es, T.If   :: rators)
@@ -100,34 +96,36 @@ struct
       in
         case tok of
           (T.Ident(i)) => parse_tokens lexer (A.Ident(i)::estack) opstack
-          | (T.Num(n)) => parse_tokens lexer (A.Number(n)::estack) opstack
-          | T.True     => parse_tokens lexer (A.Boolean(true)::estack) opstack
-          | T.False    => parse_tokens lexer (A.Boolean(false)::estack) opstack
-          | T.Nil      => parse_tokens lexer (A.NilList::estack) opstack
-          | T.If       => parse_tokens lexer estack (T.If :: opstack)
-          | T.Then     => parse_tokens lexer estack (T.Then :: opstack)
-          | T.Else     => parse_tokens lexer estack (T.Else :: opstack)
-          | T.Endif =>
-            let
-              val ((else_e :: es),   (T.Else :: ops))   = force_ops T.Endif estack opstack
-              val ((then_e :: es'),  (T.Then :: ops'))  = force_ops T.Endif es ops
-              val ((if_e   :: es''), (T.If   :: ops'')) = force_ops T.Endif es' ops'
-            in
-              parse_tokens lexer (A.Cond(if_e, then_e, else_e) :: es'') ops''
-            end
-          | (T.Unop(_) | T.Binop(_) | T.Lambda(_) | T.Cons) =>
-            let
-	          val (es', rators') = force_ops tok estack opstack
-            in
-              parse_tokens lexer es' (tok :: rators')
-            end
-          | T.LParen => parse_tokens lexer estack (T.LParen :: opstack)
-          | T.RParen =>
-            let 
-              val (es', (T.LParen :: rators)) = force_ops T.RParen estack opstack
-            in parse_tokens lexer es' rators end
-          | (T.EOS) => (estack, opstack)
-          | (T.EOF) => raise Fail("Semicolon Expected")
+        | (T.Num(n))   => parse_tokens lexer (A.Number(n)::estack) opstack
+        | T.True       => parse_tokens lexer (A.Boolean(true)::estack) opstack
+        | T.False      => parse_tokens lexer (A.Boolean(false)::estack) opstack
+        | T.Nil        => parse_tokens lexer (A.NilList::estack) opstack
+        | T.If         => parse_tokens lexer estack (T.If :: opstack)
+        | T.Then       => parse_tokens lexer estack (T.Then :: opstack)
+        | T.Else       => parse_tokens lexer estack (T.Else :: opstack)
+        | T.Endif =>
+          let
+            val ((else_e :: es),   (T.Else :: ops))   = force_ops T.Endif estack opstack
+            val ((then_e :: es'),  (T.Then :: ops'))  = force_ops T.Endif es ops
+            val ((if_e   :: es''), (T.If   :: ops'')) = force_ops T.Endif es' ops'
+          in
+            parse_tokens lexer (A.Cond(if_e, then_e, else_e) :: es'') ops''
+          end
+        | (T.Unop(_) | T.Binop(_) | T.Lambda(_) | T.Cons) =>
+          let
+	        val (es', rators') = force_ops tok estack opstack
+          in
+            parse_tokens lexer es' (tok :: rators')
+          end
+        | T.LParen => parse_tokens lexer estack (T.LParen :: opstack)
+        | T.RParen =>
+          let 
+            val (es', (T.LParen :: rators)) = force_ops T.RParen estack opstack
+          in
+            parse_tokens lexer es' rators
+          end
+        | (T.EOS) => (estack, opstack)
+        | (T.EOF) => raise Fail("Semicolon Expected")
       end
     in
       let 
@@ -141,10 +139,12 @@ struct
   fun parse_program lexer = 
     let
       fun parse_lines lexer = 
-        let val tok = lexer()
-        in case tok of
-                T.Assign(x) => (A.Assign(x,(parse_expression lexer))::parse_lines (lexer))
-                | T.EOF => []
+        let
+          val tok = lexer()
+        in
+          case tok of
+            T.Assign(x) => (A.Assign(x,(parse_expression lexer))::parse_lines (lexer))
+          | T.EOF => []
         end
     in 
       A.Program(parse_lines lexer)
