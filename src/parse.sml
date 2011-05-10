@@ -63,7 +63,7 @@ struct
         (* Abstraction. *)
         | pop_op (rand :: rands) ((rator as (T.Lambda(_))) :: rators) =
             ((abs2node rator rand) :: rands, rators)
-        (* If-then-else. *)
+        (* Conditionals. *)
         | pop_op (rand3::rand2::rand1::rands) (T.If :: rators) =
             ((cond2node rand1 rand2 rand3) :: rands, rators)
 
@@ -117,12 +117,23 @@ struct
           in
             parse_tokens lexer es' (tok :: rators')
           end
-        | T.LParen => parse_tokens lexer estack (T.LParen :: opstack)
+        | T.LParen => parse_tokens lexer (BGroup :: estack) (T.LParen :: opstack)
         | T.RParen =>
-          let 
+          let
+            (* append l x will append element x to at the end of list l. *)
+            fun append [] y = [y]
+              | append (x::xs) y = x::(append xs y)
+            (* part a [] l will split l in to two lists c and d, where c is the
+             * list of all elements in l before the first occurrence of a and d is
+             * the list of all elements in l after the first occurrence of a. *)
+            fun part a xs [] = (xs, [])
+              | a xs (a::ys) = (xs, ys)
+              | a xs (y::ys) = part (concat xs [y]) ys
             val (es', (T.LParen :: rators)) = force_ops T.RParen estack opstack
+            val (xs, ys) = part BGroup [] es'
+            (* FIXME: have ((x1 x2) x3) ... xk applications
           in
-            parse_tokens lexer es' rators
+            parse_tokens lexer es' rators *)
           end
         | (T.EOS) => (estack, opstack)
         | (T.EOF) => raise Fail("Semicolon Expected")
