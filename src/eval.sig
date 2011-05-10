@@ -8,7 +8,7 @@ signature EVAL =
 sig
 
   (* The type of the value returned by the evaluation functions. *)
-  type value = string
+  type value
 
   (* eval_expr e is the value to which the expression e evaluates. *)
   val eval_expr : Ast.expr -> value
