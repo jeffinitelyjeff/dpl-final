@@ -120,20 +120,16 @@ struct
         | T.LParen => parse_tokens lexer (BGroup :: estack) (T.LParen :: opstack)
         | T.RParen =>
           let
-            (* append l x will append element x to at the end of list l. *)
-            fun append [] y = [y]
-              | append (x::xs) y = x::(append xs y)
-            (* part a [] l will split l in to two lists c and d, where c is the
-             * list of all elements in l before the first occurrence of a and d is
-             * the list of all elements in l after the first occurrence of a. *)
-            fun part a xs [] = (xs, [])
-              | a xs (a::ys) = (xs, ys)
-              | a xs (y::ys) = part (concat xs [y]) ys
+            fun apps_to_bgroup (BGROUP::es) prev_app = prev_app
+              | apps_to_bgroup (e::BGROUP::es) prev_app = A.App(e, prev_app)
+              | apps_to_bgroup (e::es) prev_app =
+                A.app(apps_to_bgroup es, A.App(e, prev_app))
+              | apps_to_bgroup _ _ = raise Fail("BGROUP never reached")
+            and after_bgroup (BGROUP::es) = es
+              | after_bgroup (e::es) = after_bgroup es
             val (es', (T.LParen :: rators)) = force_ops T.RParen estack opstack
-            val (xs, ys) = part BGroup [] es'
-            (* FIXME: have ((x1 x2) x3) ... xk applications
           in
-            parse_tokens lexer es' rators *)
+            parse_tokens lexer (apps_to_bgroup es')::(after_bgroup es') rators
           end
         | (T.EOS) => (estack, opstack)
         | (T.EOF) => raise Fail("Semicolon Expected")
