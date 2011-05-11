@@ -279,10 +279,10 @@ struct
         Ast.BinOp(Ast.CONS, 
                   Ast.Number(1), 
                   Ast.BinOp(Ast.CONS, Ast.Number(2), Ast.NilList))) ;
-    (* do_test_eval("Eval list 5", "((fn x => fn y => x + y)(2)) :: [];",
+    do_test_eval("Eval list 5", "((fn x => fn y => x + y)(2)) :: [];",
         Ast.BinOp(Ast.CONS, Ast.Abs("y", 
                            Ast.BinOp(Ast.PLUS, Ast.Number(2), Ast.Ident("y"))),
-                           Ast.NilList)) ; *)
+                           Ast.NilList)) ;
                     
     do_test_eval("Eval hd/tl 3", "hd tl (1 :: 2 :: []);", Ast.Number(2)) ;
 
