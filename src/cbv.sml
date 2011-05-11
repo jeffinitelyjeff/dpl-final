@@ -1,8 +1,6 @@
 structure Eval
 struct
 
-my name is spencer
-
   structure A = Ast
 
   type valenv = A.ident -> valexp
