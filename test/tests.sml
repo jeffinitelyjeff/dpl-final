@@ -177,7 +177,7 @@ struct
                 Ast.BinOp(Ast.PLUS, Ast.Number 5, Ast.Number 3),
                 Ast.NilList)) ;
 
-    (*do_test_ast("List 7", "((fn x => fn y => x + y)(2)) :: [];",
+    do_test_ast("List 7", "((fn x => fn y => x + y)(2)) :: [];",
       Ast.BinOp(Ast.CONS,
                 Ast.App(Ast.Abs("x",
                                 Ast.Abs("y",
@@ -185,7 +185,7 @@ struct
                                                   Ast.Ident "x",
                                                   Ast.Ident "y"))),
                         Ast.Number 2),
-                Ast.NilList)) ;*)
+                Ast.NilList)) ;
 
     do_test_ast("Arith .9", "3 + 5;", 
         Ast.BinOp(Ast.PLUS, Ast.Number(3), Ast.Number(5))) ;

@@ -85,6 +85,19 @@ struct
                 force_ops tok es' rators'
               end
 
+      (* apps_to_bgroup (e1::e2::...::ek::BGROUP::...es...) e0 will return the AST
+       * corresponding to ((((ek ek-1)...)e2)e1)e0. *)
+      and apps_to_bgroup (BGROUP::_) exp = exp 
+        | apps_to_bgroup (E(e)::BGROUP::_) exp = A.App(e, exp)
+        | apps_to_bgroup (E(e)::es) exp = apps_to_bgroup es (A.App(e, exp))
+        | apps_to_bgroup _ _ = raise parse_error("BGROUP never reached")
+
+      (* after_bgroup (e1::...::ek::BGROUP::...es...) will return all the es after
+       * the BGROUP "expression" .*)
+      and after_bgroup (BGROUP::es) = es
+        | after_bgroup (_::es) = after_bgroup es
+        | after_bgroup _ = raise parse_error("No BGROUP found")
+              
      (* parse_tokens lexer estack opstack = (es@estack, os@ostack), where 
       *  es is the expression stack and os the operator stack after parsing the
       *  expression that starts with the first token returned by lexer.
@@ -119,24 +132,13 @@ struct
           end
         | T.LParen => parse_tokens lexer (BGROUP :: estack) (T.LParen :: opstack)
         | T.RParen =>
-       (* let
-            val (es', (T.LParen::rators))= force_ops tok estack opstack
-	      in
-            parse_tokens lexer es' rators
-          end *)
           let
-            fun apps_to_bgroup (BGROUP::_) exp = exp 
-              | apps_to_bgroup (E(e)::BGROUP::_) exp = A.App(e, exp)
-              | apps_to_bgroup (E(e)::es) exp = apps_to_bgroup es (A.App(e, exp))
-              | apps_to_bgroup _ _ = raise parse_error("BGROUP never reached")
-            and after_bgroup (BGROUP::es) = es
-              | after_bgroup (_::es) = after_bgroup es
-              | after_bgroup _ = raise parse_error("No BGROUP found")
-            val (es', (T.LParen :: rators)) = force_ops T.RParen estack opstack
+            val (es, (T.LParen :: rators)) = force_ops T.RParen estack opstack
           in
-            case es' of
-              (E(e'')::es'') => parse_tokens lexer (E(apps_to_bgroup es'' e'')::(after_bgroup es'')) rators
-            | (BGROUP::es'') => parse_tokens lexer (after_bgroup es'') rators
+            case es of
+              (e'::BGROUP::es') => parse_tokens lexer (e'::es') rators
+            | (E(e')::es') => parse_tokens lexer (E(apps_to_bgroup es' e')::(after_bgroup es')) rators
+            | (BGROUP::es') => parse_tokens lexer (after_bgroup es') rators
             | _ => raise parse_error("No BGROUP found on expression stack")
           end
         | (T.EOS) => (estack, opstack)
@@ -145,10 +147,13 @@ struct
       end
     in
       let 
-        val (es', ops') = parse_tokens lexer [] [T.LParen]
-        val ([E(e)], [T.LParen]) = force_ops T.RParen es' ops'
+        val (es', ops') = parse_tokens lexer [BGROUP] [T.LParen]
+        val (es'', [T.LParen]) = force_ops T.RParen es' ops'
       in
-        e
+        case es'' of
+          [E(e),BGROUP] => e
+        | (E(e)::es) => apps_to_bgroup es e
+        | _ => raise parse_error("Invalid expression stack returned")
       end
     end
 
