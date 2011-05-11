@@ -39,14 +39,6 @@ struct
   
   fun cond2node if_e then_e else_e = A.Cond(if_e, then_e, else_e)
 
-  fun unop2node (T.Unop(x)) e1 = A.UnOp(x, e1)
-    | unop2node _ _ = raise Fail("Invalid unary operator")
-  
-  fun abs2node (T.Lambda(i)) exp = A.Abs(i, exp)
-    | abs2node _ _ = raise Fail("Invalid lambda expression")
-  
-  fun cond2node if_e then_e else_e = A.Cond(if_e, then_e, else_e)
-
   datatype associativity = LEFT | RIGHT
 
   (* Returns the correct association rule for the given token.
@@ -95,12 +87,10 @@ struct
 
       and force_ops tok es [] = (es, [])
         | force_ops tok es (T.LParen :: rators) = (es, T.LParen :: rators)
-        (* FIXME: I'm not sure, but I think this is the way to handle conditionals...
-         * cuz If and Else tokens are like LParens... need to test *)
-        | force_ops tok es (T.Else :: rators) = (es, T.Else :: rators)
-        | force_ops tok es (T.Then :: rators) = (es, T.Then :: rators)
-        | force_ops tok es (T.If   :: rators) = (es, T.If   :: rators)
-        | force_ops tok es (rator :: rators) =
+        | force_ops tok es (T.Else   :: rators) = (es, T.Else   :: rators)
+        | force_ops tok es (T.Then   :: rators) = (es, T.Then   :: rators)
+        | force_ops tok es (T.If     :: rators) = (es, T.If     :: rators)
+        | force_ops tok es (rator    :: rators) =
             if prec tok > prec rator orelse
                (prec tok = prec rator andalso assoc tok = RIGHT)
             then (es, (rator :: rators))
@@ -143,7 +133,7 @@ struct
           in
             parse_tokens lexer es' (tok :: rators')
           end
-        | T.LParen => parse_tokens lexer (BGroup :: estack) (T.LParen :: opstack)
+        | T.LParen => parse_tokens lexer (BGROUP :: estack) (T.LParen :: opstack)
         | T.RParen =>
           let
             fun apps_to_bgroup (BGROUP::es) prev_app = prev_app
