@@ -139,11 +139,11 @@ struct
             fun apps_to_bgroup (BGROUP::es) prev_app = prev_app
               | apps_to_bgroup (e::BGROUP::es) prev_app = A.App(e, prev_app)
               | apps_to_bgroup (e::es) prev_app =
-                A.app(apps_to_bgroup es, A.App(e, prev_app))
+                A.App(apps_to_bgroup es, A.App(e, prev_app))
               | apps_to_bgroup _ _ = raise Fail("BGROUP never reached")
             and after_bgroup (BGROUP::es) = es
               | after_bgroup (e::es) = after_bgroup es
-            val (es', (T.LParen :: rators)) = force_ops T.RParen estack opstack
+            val y(es', (T.LParen :: rators)) = force_ops T.RParen estack opstack
           in
             parse_tokens lexer (apps_to_bgroup es')::(after_bgroup es') rators
           end

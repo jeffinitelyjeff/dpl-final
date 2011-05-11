@@ -3,7 +3,8 @@ struct
 
   structure A = Ast
 
-  type valenv = A.ident -> valexp
+ (* THISISFORCLOSURES
+  type valenv = A.ident -> value
 
   datatype value = Number of int*valenv
                  | Bool of bool*valenv
@@ -36,15 +37,15 @@ struct
           | A.TAIL => raise Fail("FIXME")
 (* FIXME *)
       end
-                                                            
-  fun eval_expr e = eval_clos e empty_env
+*)
+  fun eval_expr e = raise Fail("")(*eval_clos e empty_env*)
 
   fun pgm_xfrm (A.Program(A.Assign(x,e)::[])) = e
-    | pgm_xfrm (A.Program(A.Assign(x,e)::tl)) = A.App(A.Abs(x, pgm_xfrm tl), e)
+    | pgm_xfrm (A.Program(A.Assign(x,e)::tl)) = A.App(A.Abs(x, pgm_xfrm (A.Program(tl))), e)
     | pgm_xfrm _ = raise Fail("Not a proper program")
   
-  fun eval_pgm p = eval_expr (pgm_xfrm p)
-
+  fun eval_pgm p = raise Fail("")(*eval_expr (pgm_xfrm p)*)
+(* THISISFORCLOSURES
   fun values2ast (Number(n,_)) = A.Number(n)
     | values2ast (Boolean(b,_)) = A.Boolean(b)
     | values2ast (Abs(i,e,env)) = raise Fail("FIXME")(* FIXME, this needs to actually go in and read
@@ -52,4 +53,5 @@ struct
     | values2ast (Nil(_)) = A.NilList
     | values2ast (Cons(v0,v1)) = A.BinOp(CONS, values2ast v0, values2ast v1)
     | values2ast _ = raise Fail("Not a proper value; can't convert to AST")
+*)
 end
