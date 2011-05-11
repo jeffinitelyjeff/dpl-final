@@ -117,12 +117,14 @@ struct
             parse_tokens lexer es' (tok :: rators')
           end
         | T.LParen => parse_tokens lexer (estack) (T.LParen :: opstack)
-(*        | T.LParen => parse_tokens lexer (BGROUP :: estack) (T.LParen :: opstack)*)
+     (* | T.LParen => parse_tokens lexer (BGROUP :: estack) (T.LParen :: opstack) *)
         | T.RParen =>
           let
-            val (es', (T.LParen::rators))=force_ops tok estack opstack
-	  in parse_tokens lexer es' rators end
-(* let
+            val (es', (T.LParen::rators))= force_ops tok estack opstack
+	      in
+            parse_tokens lexer es' rators
+          end
+       (* let
             fun apps_to_bgroup (BGROUP::es) prev_app = prev_app
               | apps_to_bgroup (e::BGROUP::es) prev_app = A.App(e, prev_app)
               | apps_to_bgroup (e::es) prev_app =
@@ -133,7 +135,7 @@ struct
             val (es', (T.LParen :: rators)) = force_ops T.RParen estack opstack
           in
             parse_tokens lexer (apps_to_bgroup es')::(after_bgroup es') rators
-          end*)
+          end *)
         | (T.EOS) => (estack, opstack)
         | (T.EOF) => raise parse_error("Unexpected end of file")
         | _ => raise parse_error("Statement token invalid")
@@ -142,7 +144,9 @@ struct
       let 
         val (es', ops') = parse_tokens lexer [] [T.LParen]
         val ([e], [T.LParen]) = force_ops T.RParen es' ops'
-      in e end
+      in
+        e
+      end
     end
 
 (* This function parses an entire program by taking its statements 
