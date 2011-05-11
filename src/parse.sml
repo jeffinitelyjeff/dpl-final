@@ -10,7 +10,8 @@ struct
   structure A = Ast
 
   exception parse_error of string
-  (*datatype expr2 = Exp of Ast.expr | BGROUP*)
+
+  datatype expression = E of Ast.expr | BGROUP
 
   fun binop2node (T.Binop(x)) e1 e2 = A.BinOp(x, e1, e2)
     | binop2node _ _ _ = raise parse_error("Invaid binary operation.")
@@ -55,16 +56,16 @@ struct
       fun pop_op estack [] = raise parse_error "Unexpected empty opstack"
         | pop_op [] opstack = raise parse_error "Missing arguments for operator"
         (* Unary operations. *)
-        | pop_op (rand :: rands) ((rator as (T.Unop(_))) :: rators) =
+        | pop_op (E(rand) :: rands) ((rator as (T.Unop(_))) :: rators) =
             ((unop2node rator rand) :: rands, rators)
         (* Binary operations. *)
-        | pop_op (rand2::rand1::rands) ((rator as (T.Binop(_))) :: rators) =
+        | pop_op (E(rand2)::E(rand1)::rands) ((rator as (T.Binop(_))) :: rators) =
             ((binop2node rator rand1 rand2) :: rands, rators)
         (* Abstraction. *)
-        | pop_op (rand :: rands) ((rator as (T.Lambda(_))) :: rators) =
+        | pop_op (E(rand) :: rands) ((rator as (T.Lambda(_))) :: rators) =
             ((abs2node rator rand) :: rands, rators)
         (* Conditionals. *)
-        | pop_op (rand3::rand2::rand1::rands) (T.If :: rators) =
+        | pop_op (E(rand3)::E(rand2)::E(rand1)::rands) (T.If :: rators) =
             ((cond2node rand1 rand2 rand3) :: rands, rators)
         | pop_op _ _ = raise parse_error("Invalid op on top of stack")
 
