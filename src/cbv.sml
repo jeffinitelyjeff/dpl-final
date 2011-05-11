@@ -1,4 +1,4 @@
-structure Eval
+structure L1Cbv =
 struct
 
   structure A = Ast
@@ -15,8 +15,7 @@ struct
   fun env_update env x v =
     case env of
       valenv => (fn y => if y=x then v else (env y))
-    | _ => raise Fail("Update env called on non-environment")
-    end
+      | _ => raise Fail("Update env called on non-environment")
                            
   val empty_env = fn _ => raise Fail("Accessing an empty environment")
                            
@@ -32,10 +31,10 @@ struct
       in
         case rator of
           A.NEG => Number(apply_unrator rator (eval_clos Closure(e, env)))
-          A.NOT => Bool(apply_unrator rator (eval_clos Closure(e, env)))
-          A.HEAD => 
-          A.TAIL =>
-        end
+          | A.NOT => Bool(apply_unrator rator (eval_clos Closure(e, env)))
+          | A.HEAD => raise Fail("FIXME")
+          | A.TAIL => raise Fail("FIXME")
+(* FIXME *)
       end
                                                             
   fun eval_expr e = eval_clos e empty_env
@@ -48,7 +47,7 @@ struct
 
   fun values2ast (Number(n,_)) = A.Number(n)
     | values2ast (Boolean(b,_)) = A.Boolean(b)
-    | values2ast (Abs(i,e,env)) = (* FIXME, this needs to actually go in and read
+    | values2ast (Abs(i,e,env)) = raise Fail("FIXME")(* FIXME, this needs to actually go in and read
                                  the environment and fill in values. lame. *)
     | values2ast (Nil(_)) = A.NilList
     | values2ast (Cons(v0,v1)) = A.BinOp(CONS, values2ast v0, values2ast v1)

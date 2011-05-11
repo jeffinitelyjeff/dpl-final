@@ -4,7 +4,7 @@
  * 
  *
  *)
-structure Parse =
+structure L1Parse =
 struct
   structure T = Tokens
   structure A = Ast
