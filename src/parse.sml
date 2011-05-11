@@ -12,33 +12,12 @@ struct
   exception parse_error of string
   (*datatype expr2 = Exp of Ast.expr | BGROUP*)
 
- fun binop2node (T.Binop (n)) e1 e2 =
-     (case n of
-        A.PLUS  => A.BinOp(A.PLUS, e1, e2)
-      | A.SUB   => A.BinOp(A.SUB, e1, e2)
-      | A.TIMES => A.BinOp(A.TIMES, e1, e2)
-      | A.DIV   => A.BinOp(A.DIV, e1, e2)
-      | A.LT => A.BinOp(A.LT, e1, e2)
-      | A.LE => A.BinOp(A.LE, e1, e2)
-      | A.GT => A.BinOp(A.GT, e1, e2)
-      | A.GE => A.BinOp(A.GE, e1, e2)
-      | A.EQ => A.BinOp(A.EQ, e1, e2)
-      | A.NE => A.BinOp(A.NE, e1, e2)
-      | A.AND => A.BinOp(A.AND, e1, e2)
-      | A.OR  => A.BinOp(A.OR, e1, e2)
-      | A.CONS => A.BinOp(A.CONS, e1, e2))
-    | binop2node _ _ _ = raise parse_error("invalid binary operation")
-
-  fun unop2node (T.Unop(n)) e1 = (case n of
-        A.NEG => A.UnOp(A.NEG, e1)
-(*        | A.NOT => A.UnOp(A.NEG, e1)
-        | A.HEAD => A.UnOp(A.HEAD, e1)
-        | A.TAIL => A.UnOp(A.TAIL, e1)
-*)        | _ => raise parse_error("Invalid unary operator"))
-    | unop2node _ _ = raise parse_error("Invalid unary operator")
+  fun binop2node (T.Binop(x)) e1 e2 = A.BinOp(x, e1, e2)
+    | binop2node _ _ _ = raise parse_error("Invaid binary operation.")
+  fun unop2node (T.Unop(x)) e = A.UnOp(x, e)
+    | unop2node _ _ = raise parse_error("Invalid unary operation.")
   fun abs2node (T.Lambda(i)) exp = A.Abs(i, exp)
     | abs2node _ _ = raise parse_error("Invalid lambda expression")
-  
   fun cond2node if_e then_e else_e = A.Cond(if_e, then_e, else_e)
 
   datatype associativity = LEFT | RIGHT
