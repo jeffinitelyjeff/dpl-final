@@ -268,6 +268,8 @@ struct
   val test_eval = fn () => (
     do_test_eval("Eval num 1", "5;", Ast.Number(5)) ;
     do_test_eval("Eval true", "true;", Ast.Boolean(true)) ;
+    do_test_eval("Eval neg", "~9;", Ast.Number(~9)) ;
+    do_test_eval("Eval not", "not true;", Ast.Boolean(false)) ;
     do_test_eval("Eval arith 2", "2 - 2;", Ast.Number(0)) ;
     do_test_eval("Eval cond. 2", "if false then 0 else 1 fi;", Ast.Number(1)) ;
     do_test_eval("Eval cond. 3", "if 3 <= 5 then 0 else 1 fi;", Ast.Number(0)) ;
