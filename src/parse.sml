@@ -9,32 +9,35 @@ struct
   structure T = Tokens
   structure A = Ast
 
+  exception parse_error of string
   (*datatype expr2 = Exp of Ast.expr | BGROUP*)
 
-  fun binop2node (T.Binop(x)) e1 e2 = A.BinOp(x, e1, e2)
-    | binop2node _ _ _ = raise Fail("Invalid binary operator")
+ fun binop2node (T.Binop (n)) e1 e2 = (case n of
+        A.PLUS => A.BinOp(A.PLUS, e1, e2)
+        | A.SUB => A.BinOp(A.SUB, e1, e2)
+        | A.TIMES => A.BinOp(A.TIMES, e1, e2)
+        | A.DIV => A.BinOp(A.DIV, e1, e2)
+(*                 | A.LT =>A.BinOp(A.LT, e1, e2)
+                 | A.LE =>A.BinOp(A.LE, e1, e2)
+                 | A.GT =>A.BinOp(A.GT, e1, e2)
+                 | A.GE =>A.BinOp(A.GE, e1, e2)
+                 | A.EQ =>A.BinOp(A.EQ, e1, e2)
+                 | A.NE =>A.BinOp(A.NE, e1, e2)
+                 | A.AND =>A.BinOp(A.AND, e1, e2)
+                 | A.OR =>A.BinOp(A.OR, e1, e2)
+                 | A.CONS=>A.BinOp(A.CONS, e1, e2)
+*)      | _ => raise parse_error("invalid binary operation"))
+    | binop2node _ _ _ = raise parse_error("invalid binary operation")
 
- (* fun binop2node (T.Binop (n)) e1 e2 = case n of Ast.binop
-                 A.PLUS => A.BinOp(A.PLUS, e1, e2)
-                 | A.SUB => A.BinOp(A.SUB, e1, e2)
-  (*               | A.TIMES =>
-                 | A.DIV =>
-                 | A.LT =>
-                 | A.LE =>
-                 | A.GT =>
-                 | A.GE =>
-                 | A.EQ =>
-                 | A.NE =>
-                 | A.AND =>
-                 | A.OR =>
-                 | A.CONS*)
-*)
-
-  fun unop2node (T.Unop(x)) e1 = A.UnOp(x, e1)
-    | unop2node _ _ = raise Fail("Invalid unary operator")
-  
+  fun unop2node (T.Unop(n)) e1 = (case n of
+        A.NEG => A.UnOp(A.NEG, e1)
+(*        | A.NOT => A.UnOp(A.NEG, e1)
+        | A.HEAD => A.UnOp(A.HEAD, e1)
+        | A.TAIL => A.UnOp(A.TAIL, e1)
+*)        | _ => raise parse_error("Invalid unary operator"))
+    | unop2node _ _ = raise parse_error("Invalid unary operator")
   fun abs2node (T.Lambda(i)) exp = A.Abs(i, exp)
-    | abs2node _ _ = raise Fail("Invalid lambda expression")
+    | abs2node _ _ = raise parse_error("Invalid lambda expression")
   
   fun cond2node if_e then_e else_e = A.Cond(if_e, then_e, else_e)
 
@@ -44,34 +47,36 @@ struct
    * FIXME: Need to somehow make application right-associative. *)
   fun assoc (T.Unop(_) | T.Lambda(_) | T.Cons) = RIGHT
     | assoc (T.Binop(_)) = LEFT
-    | assoc _ = raise Fail("Association not in grammer")
+    | assoc _ = raise parse_error("Association not in grammer")
     
   (* Returns a number representative of the priority of the given operation
    * over others.  Higher numbers denote higher priority.  Useful for 
    * determining order of operations in an expression. *)
-   fun prec (T.Lambda(_)) = 0
+   fun prec (T.Binop(A.PLUS | A.SUB)) = 4
+    | prec (T.Binop(A.TIMES | A.DIV)) = 5
+    | prec (T.Unop(_)) = 6
+    | prec _ = raise parse_error("Invalid operator")
+
+(*
     | prec (T.Binop(A.OR | A.AND)) = 1
     | prec (T.Binop(A.GT | A.GE | A.LT | A.LE | A.EQ | A.NE)) = 2
     | prec (T.Cons) = 3
-    | prec (T.Binop(A.PLUS | A.SUB)) = 4
-    | prec (T.Binop(A.TIMES | A.DIV)) = 5
-    | prec (T.Unop(_)) = 6
+    | prec (T.Lambda(_)) = 0
     (* FIXME: get application working.
     | prec (APPLICATION _) = 7 *)
     | prec (T.RParen | T.Endif) = ~9000
-    | prec _ = raise Fail("Invalid operator")
-
+*)
   fun parse_expression lexer =
     let
       (* pop_op (e2 :: e1 :: es) (op :: ops) = (((op e1 e2) :: es), ops)
        *       if op is a binary operation,
        *  pop_op (e :: es) (op :: ops) = ((op e) :: es, ops) if op is unary.
-       *  Raises Fail if the expression stack has too few expressions for the
+       *  Raises parse_error if the expression stack has too few expressions for the
        *  operator or the opstack has no operations.
        *)
       
-      fun pop_op estack [] = raise Fail "Unexpected empty opstack"
-        | pop_op [] opstack = raise Fail "Missing arguments for operator"
+      fun pop_op estack [] = raise parse_error "Unexpected empty opstack"
+        | pop_op [] opstack = raise parse_error "Missing arguments for operator"
         (* Unary operations. *)
         | pop_op (rand :: rands) ((rator as (T.Unop(_))) :: rators) =
             ((unop2node rator rand) :: rands, rators)
@@ -84,7 +89,7 @@ struct
         (* Conditionals. *)
         | pop_op (rand3::rand2::rand1::rands) (T.If :: rators) =
             ((cond2node rand1 rand2 rand3) :: rands, rators)
-        | pop_op _ _ = raise Fail("Invalid op on top of stack")
+        | pop_op _ _ = raise parse_error("Invalid op on top of stack")
 
       and force_ops tok es [] = (es, [])
         | force_ops tok es (T.LParen :: rators) = (es, T.LParen :: rators)
@@ -145,7 +150,7 @@ struct
               | apps_to_bgroup (e::BGROUP::es) prev_app = A.App(e, prev_app)
               | apps_to_bgroup (e::es) prev_app =
                 A.App(apps_to_bgroup es, A.App(e, prev_app))
-              | apps_to_bgroup _ _ = raise Fail("BGROUP never reached")
+              | apps_to_bgroup _ _ = raise parse_error("BGROUP never reached")
             and after_bgroup (BGROUP::es) = es
               | after_bgroup (e::es) = after_bgroup es
             val (es', (T.LParen :: rators)) = force_ops T.RParen estack opstack
@@ -153,8 +158,8 @@ struct
             parse_tokens lexer (apps_to_bgroup es')::(after_bgroup es') rators
           end*)
         | (T.EOS) => (estack, opstack)
-        | (T.EOF) => raise Fail("Unexpected end of file")
-        | _ => raise Fail("Statement token invalid")
+        | (T.EOF) => raise parse_error("Unexpected end of file")
+        | _ => raise parse_error("Statement token invalid")
       end
     in
       let 
@@ -174,7 +179,7 @@ struct
           case tok of
             T.Assign(x) => (A.Assign(x,(parse_expression lexer))::parse_lines (lexer))
           | T.EOF => []
-          | _ => raise Fail("invalid beginning of statement")
+          | _ => raise parse_error("invalid beginning of statement")
         end
     in 
       A.Program(parse_lines lexer)
