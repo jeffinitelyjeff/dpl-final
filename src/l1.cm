@@ -3,13 +3,13 @@
  *)
 Group
 	signature PARSE
-	signature EVAL
+	(*signature EVAL*)
 	(*signature TYPING*)
 	functor Lexers
 	structure L1Lex
     structure Ast
 	structure L1Parse
-	structure L1Cbv
+	(*structure L1Cbv*)
 	(*structure Typing*)
 is
     tokens.sml
@@ -24,8 +24,8 @@ is
 	(*typing.sig*)
 	(*typing.sml*)
 
-	eval.sig
-	cbv.sml
+	(*eval.sig*)
+	(*cbv.sml*)
 
     $/basis.cm
 	$smlnj-tdp/plugins.cm
