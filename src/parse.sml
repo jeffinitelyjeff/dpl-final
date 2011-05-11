@@ -24,7 +24,7 @@ struct
 
   (* Returns the correct association rule for the given token.
    * FIXME: Need to somehow make application right-associative. *)
-  fun assoc (T.Unop(_) | T.Lambda(_) | T.Cons) = RIGHT
+  fun assoc (T.Unop(_) | T.Lambda(_) | T.Binop(A.CONS)) = RIGHT
     | assoc (T.Binop(_)) = LEFT
     | assoc _ = raise parse_error("Association not in grammer")
     

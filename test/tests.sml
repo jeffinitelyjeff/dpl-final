@@ -167,6 +167,8 @@ struct
                 Ast.BinOp(Ast.LT, Ast.Ident "z", Ast.Ident "y"))) ;
 
     do_test_ast("List 1", "[];", Ast.NilList) ;
+    do_test_ast("List 1.5", "2 :: [];",
+      Ast.BinOp(Ast.CONS, Ast.Number 2, Ast.NilList)) ;
     do_test_ast("List 2", "2 :: 3 :: [];",
       Ast.BinOp(Ast.CONS, Ast.Number 2,
                    Ast.BinOp(Ast.CONS, Ast.Number 3, Ast.NilList))) ;
