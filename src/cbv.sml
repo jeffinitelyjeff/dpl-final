@@ -3,6 +3,19 @@ struct
 
   structure A = Ast
 
+  datatype value = Number of int | Boolean of bool | Abs of A.ident*A.expr
+
+  fun eval_expr (e : A.expr) =
+      case e of
+        (A.Number(n)) => Number(n)
+      | (A.Boolean(b)) => Boolean(b)
+      | (A.Abs(i,b)) => Abs(i,b)
+      | _ => raise Fail("expression not yet considered") (* FIXME *)
+
+
+
+                                                         
+
  (* THISISFORCLOSURES
   type valenv = A.ident -> value
 
