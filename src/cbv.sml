@@ -5,11 +5,57 @@ struct
 
   datatype value = Number of int | Boolean of bool | Abs of A.ident*A.expr
 
+  fun value_to_num (Number(n)) = n
+    | value_to_num _ = raise Fail("Value is not a number")
+  fun value_to_bool (Boolean(b)) = b
+    | value_to_bool _ = raise Fail("Value is not a boolean")
+  fun value_to_abs (Abs(i,e)) = (i,e)
+    | value_to_abs _ = raise Fail("Value is not an abstraction")
+
   fun eval_expr (e : A.expr) =
       case e of
         (A.Number(n)) => Number(n)
       | (A.Boolean(b)) => Boolean(b)
       | (A.Abs(i,b)) => Abs(i,b)
+      | (A.UnOp(rator, e)) =>
+        let
+          val v = eval_expr e
+        in
+          case rator of
+            A.NEG => Number((value_to_num v))
+          | A.NOT => Boolean(not (value_to_bool v))
+          | _ => raise Fail("unary operator not yet considered") (* FIXME *)
+        end
+      | (A.BinOp(rator, e1, e2)) =>
+        let
+          val v1 = eval_expr e1
+          val v2 = eval_expr e2
+        in
+          case rator of
+            A.PLUS  => Number((value_to_num v1)  +  (value_to_num v2))
+          | A.SUB   => Number((value_to_num v1)  -  (value_to_num v2))
+          | A.TIMES => Number((value_to_num v1)  *  (value_to_num v2))
+          | A.DIV   => Number((value_to_num v1) div (value_to_num v2))
+          | A.LT    => Boolean((value_to_num v1) <  (value_to_num v2))
+          | A.LE    => Boolean((value_to_num v1) <= (value_to_num v2))
+          | A.GT    => Boolean((value_to_num v1) >  (value_to_num v2))
+          | A.GE    => Boolean((value_to_num v1) >= (value_to_num v2))
+          | A.NE    => Boolean((value_to_num v1) <> (value_to_num v2))
+          | A.AND   => Boolean((value_to_bool v1) andalso (value_to_bool v2))
+          | A.OR    => Boolean((value_to_bool v1) orelse  (value_to_bool v2))
+          | _ => raise Fail("Invalid binary operator")
+        end
+      (* | A.NilList => *) (* FIXME *)
+      | (A.Cond(if_e, then_e, else_e)) =>
+        let
+          val (Boolean(if_v))   = eval_expr if_e
+          val (Boolean(then_v)) = eval_expr then_e
+          val (Boolean(else_v)) = eval_expr else_e
+        in
+          if if_v then Boolean(then_v) else Boolean(else_v)
+        end
+      (* | (A.Abs(id, e)) => *) (* FIXME *)
+      (* | (A.App(rator, rand)) => *) (* FIXME *)
       | _ => raise Fail("expression not yet considered") (* FIXME *)
 
 
