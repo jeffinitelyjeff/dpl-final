@@ -68,13 +68,13 @@ struct
             ((cond2node rand1 rand2 rand3) :: rands, rators)
 
       and force_ops tok es [] = (es, [])
-      | force_ops tok es (T.LParen :: rators) = (es, T.LParen :: rators)
-      (* FIXME: I'm not sure, but I think this is the way to handle conditionals...
-       * cuz If and Else tokens are like LParens... need to test *)
-      | force_ops tok es (T.Else :: rators) = (es, T.Else :: rators)
-      | force_ops tok es (T.Then :: rators) = (es, T.Then :: rators)
-      | force_ops tok es (T.If   :: rators) = (es, T.If   :: rators)
-      | force_ops tok es (rator :: rators) =
+        | force_ops tok es (T.LParen :: rators) = (es, T.LParen :: rators)
+        (* FIXME: I'm not sure, but I think this is the way to handle conditionals...
+         * cuz If and Else tokens are like LParens... need to test *)
+        | force_ops tok es (T.Else :: rators) = (es, T.Else :: rators)
+        | force_ops tok es (T.Then :: rators) = (es, T.Then :: rators)
+        | force_ops tok es (T.If   :: rators) = (es, T.If   :: rators)
+        | force_ops tok es (rator :: rators) =
             if prec tok > prec rator orelse
                (prec tok = prec rator andalso assoc tok = RIGHT)
             then (es, (rator :: rators))
