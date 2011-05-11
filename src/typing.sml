@@ -52,8 +52,21 @@ struct
 (*  fun gen_constraints cs LIdent(i, x) = *)
             
 
-
+  (* infer e => the most general type of e, inferred using Hindley-Milner.
+   *  Raises infer_error if no type can be inferred for e.
+   *)
   fun infer e = raise Fail("Need to implement type inference")
 
-  fun toString arrrrg = raise infer_error
+
+  (* toString s => a fully-parenthesized string representation of the
+   *  type s.
+   *
+   * val toString : t -> string
+   *)
+  fun toString (V(v)) = chr(v)
+    | toString (Int) = "int"
+    | toString (Bool) = "bool"
+    | toString (Arrow(e1, e2) = toString "("(toString e1)^" --> "^(toString e2)^")"
+    | toString (List(t)) = (toString t)^" list"
+    _ toString _ = raise infer_error("invalid type")
 end
