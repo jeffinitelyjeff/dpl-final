@@ -24,7 +24,18 @@ struct
           case rator of
             A.NEG => Number((value_to_num v))
           | A.NOT => Boolean(not (value_to_bool v))
-          | _ => raise Fail("unary operator not yet considered") (* FIXME *)
+          | A.HEAD =>
+            let
+              val (Cons(v1,v2)) = v
+            in
+              v1
+            end
+          | A.TAIL =>
+            let
+              val (Cons(v1,v2)) = v
+            in
+              v2
+            end
         end
       | (A.BinOp(rator, e1, e2)) =>
         let
