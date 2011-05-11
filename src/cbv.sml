@@ -23,6 +23,8 @@ struct
   fun eval_clos (Closure(A.Number(n), _)) = Number(n, empty_env)
     | eval_clos (Closure(A.Boolean(b), _)) = Bool(b, empty_env)
     | eval_clos (Closure(A.UnOp(NEG,e), env)) =
+      let
+        val (Number( ) = eval_clos Closure(e, env)
 
         
                                                             
