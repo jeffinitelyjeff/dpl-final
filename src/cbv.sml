@@ -57,9 +57,9 @@ struct
       (* | (A.App(rator, rand)) => *) (* FIXME *)
       | _ => raise Fail("expression not yet considered") (* FIXME *)
 
-  fun values2ast (Number(n)) = A.Number(n)
-    | values2ast (Boolean(b)) = A.Boolean(b)
-    | values2ast (Abs(i,e)) = A.Abs(i,e)
+  fun value2ast (Number(n)) = A.Number(n)
+    | value2ast (Boolean(b)) = A.Boolean(b)
+    | value2ast (Abs(i,e)) = A.Abs(i,e)
 (*    | values2ast _ = raise Fail("not a value considered yet") (* FIXME *) *)
 
 
