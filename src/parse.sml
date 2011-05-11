@@ -1,8 +1,7 @@
 (*
  * Need still to do APP
  *
- * Parse (currently) has no way of determining whether return types of 
- * expressions are correct for the operation that they are being used for!
+ * 
  *
  *)
 structure Parse =
@@ -10,8 +9,35 @@ struct
   structure T = Tokens
   structure A = Ast
 
+  type e = Ast.expr
+  datatype expr2 = e | BGROUP
+
   fun binop2node (T.Binop(x)) e1 e2 = A.BinOp(x, e1, e2)
-    | binop2node _ _ = raise Fail("Invalid binary operator")
+    | binop2node _ _ _ = raise Fail("Invalid binary operator")
+
+ (* fun binop2node (T.Binop (n)) e1 e2 = case n of Ast.binop
+                 A.PLUS => A.BinOp(A.PLUS, e1, e2)
+                 | A.SUB => A.BinOp(A.SUB, e1, e2)
+  (*               | A.TIMES =>
+                 | A.DIV =>
+                 | A.LT =>
+                 | A.LE =>
+                 | A.GT =>
+                 | A.GE =>
+                 | A.EQ =>
+                 | A.NE =>
+                 | A.AND =>
+                 | A.OR =>
+                 | A.CONS*)
+*)
+
+  fun unop2node (T.Unop(x)) e1 = A.UnOp(x, e1)
+    | unop2node _ _ = raise Fail("Invalid unary operator")
+  
+  fun abs2node (T.Lambda(i)) exp = A.Abs(i, exp)
+    | abs2node _ _ = raise Fail("Invalid lambda expression")
+  
+  fun cond2node if_e then_e else_e = A.Cond(if_e, then_e, else_e)
 
   fun unop2node (T.Unop(x)) e1 = A.UnOp(x, e1)
     | unop2node _ _ = raise Fail("Invalid unary operator")
@@ -40,7 +66,7 @@ struct
     | prec (T.Unop(_)) = 6
     (* FIXME: get application working.
     | prec (APPLICATION _) = 7 *)
-    | prec (T.RParen | T.Endif) = ~9000 *)
+    | prec (T.RParen | T.Endif) = ~9000
     | prec _ = raise Fail("Invalid operator")
 
   fun parse_expression lexer =
