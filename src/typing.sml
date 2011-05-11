@@ -66,7 +66,7 @@ struct
   fun toString (V(v)) = chr(v)
     | toString (Int) = "int"
     | toString (Bool) = "bool"
-    | toString (Arrow(e1, e2) = toString "("(toString e1)^" --> "^(toString e2)^")"
+    | toString (Arrow(e1, e2) = "("^(toString e1)^" --> "^(toString e2)^")"
     | toString (List(t)) = (toString t)^" list"
-    _ toString _ = raise infer_error("invalid type")
+(*    | toString _ = raise infer_error("invalid type") *)
 end
