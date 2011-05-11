@@ -260,6 +260,12 @@ struct
                Ast.App(Ast.App(Ast.Ident "z",
                                Ast.Boolean true),
                        Ast.Boolean true))) ;
+
+    do_test_ast("App 7", "3 + f x;",
+      Ast.BinOp(Ast.PLUS,
+                Ast.Number 3,
+                Ast.App(Ast.Ident "f",
+                        Ast.Ident "x"))) ;
                        
 
     true
