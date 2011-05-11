@@ -3,7 +3,7 @@ struct
 
   structure A = Ast
 
-  datatype value = Number of int | Boolean of bool | Abs of A.ident*A.expr
+  datatype value = Number of int | Boolean of bool | Abs of A.ident*A.expr | Nil | Cons of value*value
 
   fun value_to_num (Number(n)) = n
     | value_to_num _ = raise Fail("Value is not a number")
@@ -43,9 +43,10 @@ struct
           | A.NE    => Boolean((value_to_num v1) <> (value_to_num v2))
           | A.AND   => Boolean((value_to_bool v1) andalso (value_to_bool v2))
           | A.OR    => Boolean((value_to_bool v1) orelse  (value_to_bool v2))
+          | A.CONS  => Cons(v1, v2)
           | _ => raise Fail("Invalid binary operator")
         end
-      (* | A.NilList => *) (* FIXME *)
+      | A.NilList => Nil
       | (A.Cond(if_e, then_e, else_e)) =>
         let
           val (Boolean(if_v))   = eval_expr if_e
@@ -60,6 +61,8 @@ struct
   fun value2ast (Number(n)) = A.Number(n)
     | value2ast (Boolean(b)) = A.Boolean(b)
     | value2ast (Abs(i,e)) = A.Abs(i,e)
+    | value2ast Nil = A.NilList
+    | value2ast (Cons(v1,v2)) = A.BinOp(A.CONS, value2ast v1, value2ast v2)
 (*    | values2ast _ = raise Fail("not a value considered yet") (* FIXME *) *)
 
 
