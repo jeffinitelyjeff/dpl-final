@@ -49,10 +49,10 @@ struct
       | (A.Cond(if_e, then_e, else_e)) =>
         let
           val (Boolean(if_v))   = eval_expr if_e
-          val (Boolean(then_v)) = eval_expr then_e
-          val (Boolean(else_v)) = eval_expr else_e
+          val then_v = eval_expr then_e
+          val else_v = eval_expr else_e
         in
-          if if_v then Boolean(then_v) else Boolean(else_v)
+          if if_v then then_v else else_v                                       
         end
       (* | (A.App(rator, rand)) => *) (* FIXME *)
       | _ => raise Fail("expression not yet considered") (* FIXME *)
