@@ -244,12 +244,23 @@ struct
                 Ast.Number 3)) ;
     do_test_ast("UnParenApp 2", "x 3 5;",
       Ast.App(Ast.App(Ast.Ident "x",
-                      Ast.Number 3),
+                      Ast.Number 5),
               Ast.Number 5)) ;
     do_test_ast("App 5", "(fn x => x) 3 + 4 ;",
       Ast.BinOp(Ast.PLUS,
                 Ast.App(Ast.Abs("x", Ast.Ident "x"), Ast.Number 3), 
                 Ast.Number 4)) ;
+
+    do_test_ast("App 6", "if x 3 2 then y 1 true else z true true fi ;",
+      Ast.Cond(Ast.App(Ast.App(Ast.Ident "x",
+                               Ast.Number 3),
+                       Ast.Number 2),
+               Ast.App(Ast.Ident "y",
+                       Ast.Number 1),
+               Ast.App(Ast.App(Ast.Ident "z",
+                               Ast.Boolean true),
+                       Ast.Boolean true))) ;
+                       
 
     true
   )

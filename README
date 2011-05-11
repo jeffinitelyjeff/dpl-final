@@ -1,0 +1,6 @@
+The commands to run the tests:
+
+1. Go into ML
+2. Run "CM.make("test/l1_tests.cm");
+3. Enter "structure t = Tests;"
+4. Enter "t.TESTNAME" (like test_ast)

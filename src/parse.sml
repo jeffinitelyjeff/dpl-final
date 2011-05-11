@@ -87,10 +87,9 @@ struct
 
       (* apps_to_bgroup (e1::e2::...::ek::BGROUP::...es...) e0 will return the AST
        * corresponding to ((((ek ek-1)...)e2)e1)e0. *)
-      and apps_to_bgroup (BGROUP::_) exp = exp 
-        | apps_to_bgroup (E(e)::BGROUP::_) exp = A.App(e, exp)
-        | apps_to_bgroup (E(e)::es) exp = apps_to_bgroup es (A.App(e, exp))
-        | apps_to_bgroup _ _ = raise parse_error("BGROUP never reached")
+      and apps_to_bgroup (E(e1)::E(e2)::BGROUP::_) = A.App(e2, e1)
+        | apps_to_bgroup (E(e)::es) = A.App(apps_to_bgroup es, e)
+        | apps_to_bgroup _ = raise parse_error("BGROUP never reached, or too quickly.")
 
       (* after_bgroup (e1::...::ek::BGROUP::...es...) will return all the es after
        * the BGROUP "expression" .*)
@@ -105,7 +104,7 @@ struct
       and parse_tokens lexer estack opstack =
       let
         val tok = lexer()
-        val x = print (T.tok2str tok ^ "===")
+        (* val x = print (T.tok2str tok ^ "===") *)
       in
         case tok of
           (T.Ident(i)) => parse_tokens lexer (E(A.Ident(i))::estack) opstack
@@ -136,10 +135,10 @@ struct
             val (es, (T.LParen :: rators)) = force_ops T.RParen estack opstack
           in
             case es of
-              (e'::BGROUP::es') => parse_tokens lexer (e'::es') rators
-            | (E(e')::es') => parse_tokens lexer (E(apps_to_bgroup es' e')::(after_bgroup es')) rators
-            | (BGROUP::es') => parse_tokens lexer (after_bgroup es') rators
-            | _ => raise parse_error("No BGROUP found on expression stack")
+              (BGROUP::es') => parse_tokens lexer (after_bgroup es') rators
+            | (e'::BGROUP::es') => parse_tokens lexer (e'::es') rators
+            | (E(_)::E(_)::_) => parse_tokens lexer (E(apps_to_bgroup es)::(after_bgroup es)) rators
+            | _ => raise parse_error("Invalid expression stack")
           end
         | (T.EOS) => (estack, opstack)
         | (T.EOF) => raise parse_error("Unexpected end of file")
@@ -150,7 +149,7 @@ struct
         val (es', ops') = parse_tokens lexer [BGROUP] [T.LParen]
         val (es'', [T.LParen]) = force_ops T.RParen es' ops'
 
-        val x = print " "
+        (* val x = print " "
         fun prin ([] | [BGROUP]) = true
           | prin (E(e)::es) =
             let
@@ -158,11 +157,11 @@ struct
             in
               prin es
             end
-        val b = prin es''
+        val b = prin es'' *)
       in
         case es'' of
           [E(e),BGROUP] => e
-        | (E(e)::es) => apps_to_bgroup es e
+        | (E(_)::E(_)::_) => apps_to_bgroup es''
         | _ => raise parse_error("Invalid expression stack returned")
       end
     end
