@@ -11,15 +11,15 @@ struct
 
   exception parse_error of string
 
-  datatype expression = E of Ast.expr | BGROUP
+  datatype expression = E of A.expr | BGROUP
 
-  fun binop2node (T.Binop(x)) e1 e2 = A.BinOp(x, e1, e2)
+  fun binop2node (T.Binop(x)) e1 e2 = E(A.BinOp(x, e1, e2))
     | binop2node _ _ _ = raise parse_error("Invaid binary operation.")
-  fun unop2node (T.Unop(x)) e = A.UnOp(x, e)
+  fun unop2node (T.Unop(x)) e = E(A.UnOp(x, e))
     | unop2node _ _ = raise parse_error("Invalid unary operation.")
-  fun abs2node (T.Lambda(i)) exp = A.Abs(i, exp)
+  fun abs2node (T.Lambda(i)) exp = E(A.Abs(i, exp))
     | abs2node _ _ = raise parse_error("Invalid lambda expression")
-  fun cond2node if_e then_e else_e = A.Cond(if_e, then_e, else_e)
+  fun cond2node if_e then_e else_e = E(A.Cond(if_e, then_e, else_e))
 
   datatype associativity = LEFT | RIGHT
 
@@ -125,16 +125,19 @@ struct
             parse_tokens lexer es' rators
           end *)
           let
-            fun apps_to_bgroup (BGROUP::es) prev_app = prev_app
-              | apps_to_bgroup (e::BGROUP::es) prev_app = A.App(e, prev_app)
-              | apps_to_bgroup (e::es) prev_app =
-                A.App(apps_to_bgroup es, A.App(e, prev_app))
+            fun apps_to_bgroup (BGROUP::_) exp = exp 
+              | apps_to_bgroup (E(e)::BGROUP::_) exp = A.App(e, exp)
+              | apps_to_bgroup (E(e)::es) exp = apps_to_bgroup es (A.App(e, exp))
               | apps_to_bgroup _ _ = raise parse_error("BGROUP never reached")
             and after_bgroup (BGROUP::es) = es
-              | after_bgroup (e::es) = after_bgroup es
+              | after_bgroup (_::es) = after_bgroup es
+              | after_bgroup _ = raise parse_error("No BGROUP found")
             val (es', (T.LParen :: rators)) = force_ops T.RParen estack opstack
           in
-            parse_tokens lexer (apps_to_bgroup es')::(after_bgroup es') rators
+            case es' of
+              (E(e'')::es'') => parse_tokens lexer (E(apps_to_bgroup es'' e'')::(after_bgroup es'')) rators
+            | (BGROUP::es'') => parse_tokens lexer (after_bgroup es'') rators
+            | _ => raise parse_error("No BGROUP found on expression stack")
           end
         | (T.EOS) => (estack, opstack)
         | (T.EOF) => raise parse_error("Unexpected end of file")
