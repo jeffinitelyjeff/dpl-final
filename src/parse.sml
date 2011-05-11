@@ -12,21 +12,21 @@ struct
   exception parse_error of string
   (*datatype expr2 = Exp of Ast.expr | BGROUP*)
 
- fun binop2node (T.Binop (n)) e1 e2 = (case n of
-        A.PLUS => A.BinOp(A.PLUS, e1, e2)
-        | A.SUB => A.BinOp(A.SUB, e1, e2)
-        | A.TIMES => A.BinOp(A.TIMES, e1, e2)
-        | A.DIV => A.BinOp(A.DIV, e1, e2)
-(*                 | A.LT =>A.BinOp(A.LT, e1, e2)
-                 | A.LE =>A.BinOp(A.LE, e1, e2)
-                 | A.GT =>A.BinOp(A.GT, e1, e2)
-                 | A.GE =>A.BinOp(A.GE, e1, e2)
-                 | A.EQ =>A.BinOp(A.EQ, e1, e2)
-                 | A.NE =>A.BinOp(A.NE, e1, e2)
-                 | A.AND =>A.BinOp(A.AND, e1, e2)
-                 | A.OR =>A.BinOp(A.OR, e1, e2)
-                 | A.CONS=>A.BinOp(A.CONS, e1, e2)
-*)      | _ => raise parse_error("invalid binary operation"))
+ fun binop2node (T.Binop (n)) e1 e2 =
+     (case n of
+        A.PLUS  => A.BinOp(A.PLUS, e1, e2)
+      | A.SUB   => A.BinOp(A.SUB, e1, e2)
+      | A.TIMES => A.BinOp(A.TIMES, e1, e2)
+      | A.DIV   => A.BinOp(A.DIV, e1, e2)
+      | A.LT => A.BinOp(A.LT, e1, e2)
+      | A.LE => A.BinOp(A.LE, e1, e2)
+      | A.GT => A.BinOp(A.GT, e1, e2)
+      | A.GE => A.BinOp(A.GE, e1, e2)
+      | A.EQ => A.BinOp(A.EQ, e1, e2)
+      | A.NE => A.BinOp(A.NE, e1, e2)
+      | A.AND => A.BinOp(A.AND, e1, e2)
+      | A.OR  => A.BinOp(A.OR, e1, e2)
+      | A.CONS => A.BinOp(A.CONS, e1, e2))
     | binop2node _ _ _ = raise parse_error("invalid binary operation")
 
   fun unop2node (T.Unop(n)) e1 = (case n of
@@ -52,20 +52,18 @@ struct
   (* Returns a number representative of the priority of the given operation
    * over others.  Higher numbers denote higher priority.  Useful for 
    * determining order of operations in an expression. *)
-   fun prec (T.Binop(A.PLUS | A.SUB)) = 4
+   fun prec (T.Lambda(_)) = 0
+    | prec (T.Binop(A.OR | A.AND)) = 1                                      
+    | prec (T.Binop(A.GT | A.GE | A.LT | A.LE | A.EQ | A.NE)) = 2
+    (* | prec (T.Cons) = 3 *) (* FIXME *)
+    | prec (T.Binop(A.PLUS | A.SUB)) = 4
     | prec (T.Binop(A.TIMES | A.DIV)) = 5
     | prec (T.Unop(_)) = 6
+    (* | prec (APPLICATION _) = 7 *) (* FIXME *)
+    | prec (T.RParen | T.Endif) = ~9000
     | prec _ = raise parse_error("Invalid operator")
 
-(*
-    | prec (T.Binop(A.OR | A.AND)) = 1
-    | prec (T.Binop(A.GT | A.GE | A.LT | A.LE | A.EQ | A.NE)) = 2
-    | prec (T.Cons) = 3
-    | prec (T.Lambda(_)) = 0
-    (* FIXME: get application working.
-    | prec (APPLICATION _) = 7 *)
-    | prec (T.RParen | T.Endif) = ~9000
-*)
+
   fun parse_expression lexer =
     let
       (* pop_op (e2 :: e1 :: es) (op :: ops) = (((op e1 e2) :: es), ops)
