@@ -34,7 +34,7 @@ struct
    fun prec (T.Lambda(_)) = 0
     | prec (T.Binop(A.OR | A.AND)) = 1                                      
     | prec (T.Binop(A.GT | A.GE | A.LT | A.LE | A.EQ | A.NE)) = 2
-    (* | prec (T.Cons) = 3 *) (* FIXME *)
+    | prec (T.Binop(A.CONS)) = 3 
     | prec (T.Binop(A.PLUS | A.SUB)) = 4
     | prec (T.Binop(A.TIMES | A.DIV)) = 5
     | prec (T.Unop(_)) = 6
