@@ -231,7 +231,7 @@ struct
                  Ast.Ident("zed"))) ;
 
     (* Fully-parenthesized abstraction and application. *)
-    do_test_ast("ParenApp 1", "(x)(7);", 
+    do_test_ast("ParenApp 1", "(x)(7)(4);", 
         Ast.App(Ast.Ident("x"), Ast.Number(7))) ;
 
     do_test_ast("ParenApp 2", "(fn x => (x + 3))(7);",

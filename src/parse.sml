@@ -105,7 +105,7 @@ struct
       and parse_tokens lexer estack opstack =
       let
         val tok = lexer()
-        (* val x = print (T.toString tok ^ "===") *)
+        val x = print (T.tok2str tok ^ "===")
       in
         case tok of
           (T.Ident(i)) => parse_tokens lexer (E(A.Ident(i))::estack) opstack
@@ -149,6 +149,16 @@ struct
       let 
         val (es', ops') = parse_tokens lexer [BGROUP] [T.LParen]
         val (es'', [T.LParen]) = force_ops T.RParen es' ops'
+
+        val x = print " "
+        fun prin ([] | [BGROUP]) = true
+          | prin (E(e)::es) =
+            let
+              val x = print (A.ast2str e ^ "==")
+            in
+              prin es
+            end
+        val b = prin es''
       in
         case es'' of
           [E(e),BGROUP] => e
