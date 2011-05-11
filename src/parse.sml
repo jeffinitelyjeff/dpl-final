@@ -95,21 +95,21 @@ struct
         (* val x = print (T.toString tok ^ "===") *)
       in
         case tok of
-          (T.Ident(i)) => parse_tokens lexer (A.Ident(i)::estack) opstack
-        | (T.Num(n))   => parse_tokens lexer (A.Number(n)::estack) opstack
-        | T.True       => parse_tokens lexer (A.Boolean(true)::estack) opstack
-        | T.False      => parse_tokens lexer (A.Boolean(false)::estack) opstack
-        | T.Nil        => parse_tokens lexer (A.NilList::estack) opstack
+          (T.Ident(i)) => parse_tokens lexer (E(A.Ident(i))::estack) opstack
+        | (T.Num(n))   => parse_tokens lexer (E(A.Number(n))::estack) opstack
+        | T.True       => parse_tokens lexer (E(A.Boolean(true))::estack) opstack
+        | T.False      => parse_tokens lexer (E(A.Boolean(false))::estack) opstack
+        | T.Nil        => parse_tokens lexer (E(A.NilList)::estack) opstack
         | T.If         => parse_tokens lexer estack (T.If :: opstack)
         | T.Then       => parse_tokens lexer estack (T.Then :: opstack)
         | T.Else       => parse_tokens lexer estack (T.Else :: opstack)
         | T.Endif =>
           let
-            val ((else_e :: es),   (T.Else :: ops))   = force_ops T.Endif estack opstack
-            val ((then_e :: es'),  (T.Then :: ops'))  = force_ops T.Endif es ops
-            val ((if_e   :: es''), (T.If   :: ops'')) = force_ops T.Endif es' ops'
+            val ((E(else_e) :: es), (T.Else :: ops)) = force_ops T.Endif estack opstack
+            val ((E(then_e) :: es'), (T.Then :: ops')) = force_ops T.Endif es ops
+            val ((E(if_e) :: es''), (T.If :: ops'')) = force_ops T.Endif es' ops'
           in
-            parse_tokens lexer (A.Cond(if_e, then_e, else_e) :: es'') ops''
+            parse_tokens lexer (E(A.Cond(if_e, then_e, else_e)) :: es'') ops''
           end
         | (T.Unop(_) | T.Binop(_) | T.Lambda(_) | T.Cons) =>
           let
@@ -117,8 +117,7 @@ struct
           in
             parse_tokens lexer es' (tok :: rators')
           end
-        | T.LParen => parse_tokens lexer (estack) (T.LParen :: opstack)
-     (* | T.LParen => parse_tokens lexer (BGROUP :: estack) (T.LParen :: opstack) *)
+        | T.LParen => parse_tokens lexer (BGROUP :: estack) (T.LParen :: opstack)
         | T.RParen =>
           let
             val (es', (T.LParen::rators))= force_ops tok estack opstack
