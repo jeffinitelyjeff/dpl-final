@@ -100,7 +100,6 @@ struct
 (* FIXME *)
       end
 *)
-  fun eval_expr e = raise Fail("")(*eval_clos e empty_env*)
 
   fun pgm_xfrm (A.Program(A.Assign(x,e)::[])) = e
     | pgm_xfrm (A.Program(A.Assign(x,e)::tl)) = A.App(A.Abs(x, pgm_xfrm (A.Program(tl))), e)
