@@ -22,11 +22,21 @@ struct
                            
   fun eval_clos (Closure(A.Number(n), _)) = Number(n, empty_env)
     | eval_clos (Closure(A.Boolean(b), _)) = Bool(b, empty_env)
-    | eval_clos (Closure(A.UnOp(NEG,e), env)) =
+    | eval_clos (Closure(A.UnOp(rator, e), env)) =
       let
-        val (Number( ) = eval_clos Closure(e, env)
-
-        
+        fun apply_unrator A.NEG e = ~e
+          | apply_unrator A.NOT e = not e
+          | apply_unrator A.HEAD e = hd e
+          | apply_unrator A.TAIL e = tl e
+          | apply_unrator _ _ = raise Fail("Not a unary operator")
+      in
+        case rator of
+          A.NEG => Number(apply_unrator rator (eval_clos Closure(e, env)))
+          A.NOT => Bool(apply_unrator rator (eval_clos Closure(e, env)))
+          A.HEAD => 
+          A.TAIL =>
+        end
+      end
                                                             
   fun eval_expr e = eval_clos e empty_env
 
