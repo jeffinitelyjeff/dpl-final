@@ -9,8 +9,7 @@ struct
   structure T = Tokens
   structure A = Ast
 
-  type e = Ast.expr
-  datatype expr2 = e | BGROUP
+  (*datatype expr2 = Exp of Ast.expr | BGROUP*)
 
   fun binop2node (T.Binop(x)) e1 e2 = A.BinOp(x, e1, e2)
     | binop2node _ _ _ = raise Fail("Invalid binary operator")
@@ -45,6 +44,7 @@ struct
    * FIXME: Need to somehow make application right-associative. *)
   fun assoc (T.Unop(_) | T.Lambda(_) | T.Cons) = RIGHT
     | assoc (T.Binop(_)) = LEFT
+    | assoc _ = raise Fail("Association not in grammer")
     
   (* Returns a number representative of the priority of the given operation
    * over others.  Higher numbers denote higher priority.  Useful for 
@@ -84,6 +84,7 @@ struct
         (* Conditionals. *)
         | pop_op (rand3::rand2::rand1::rands) (T.If :: rators) =
             ((cond2node rand1 rand2 rand3) :: rands, rators)
+        | pop_op _ _ = raise Fail("Invalid op on top of stack")
 
       and force_ops tok es [] = (es, [])
         | force_ops tok es (T.LParen :: rators) = (es, T.LParen :: rators)
@@ -133,9 +134,13 @@ struct
           in
             parse_tokens lexer es' (tok :: rators')
           end
-        | T.LParen => parse_tokens lexer (BGROUP :: estack) (T.LParen :: opstack)
+        | T.LParen => parse_tokens lexer (estack) (T.LParen :: opstack)
+(*        | T.LParen => parse_tokens lexer (BGROUP :: estack) (T.LParen :: opstack)*)
         | T.RParen =>
           let
+            val (es', (T.LParen::rators))=force_ops tok estack opstack
+	  in parse_tokens lexer es' rators end
+(* let
             fun apps_to_bgroup (BGROUP::es) prev_app = prev_app
               | apps_to_bgroup (e::BGROUP::es) prev_app = A.App(e, prev_app)
               | apps_to_bgroup (e::es) prev_app =
@@ -143,12 +148,13 @@ struct
               | apps_to_bgroup _ _ = raise Fail("BGROUP never reached")
             and after_bgroup (BGROUP::es) = es
               | after_bgroup (e::es) = after_bgroup es
-            val y(es', (T.LParen :: rators)) = force_ops T.RParen estack opstack
+            val (es', (T.LParen :: rators)) = force_ops T.RParen estack opstack
           in
             parse_tokens lexer (apps_to_bgroup es')::(after_bgroup es') rators
-          end
+          end*)
         | (T.EOS) => (estack, opstack)
-        | (T.EOF) => raise Fail("Semicolon Expected")
+        | (T.EOF) => raise Fail("Unexpected end of file")
+        | _ => raise Fail("Statement token invalid")
       end
     in
       let 
@@ -168,6 +174,7 @@ struct
           case tok of
             T.Assign(x) => (A.Assign(x,(parse_expression lexer))::parse_lines (lexer))
           | T.EOF => []
+          | _ => raise Fail("invalid beginning of statement")
         end
     in 
       A.Program(parse_lines lexer)
